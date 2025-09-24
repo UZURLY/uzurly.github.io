@@ -27,6 +27,8 @@ social:
 
 # Sidebar avatar (place an image in /assets/img/avatar.png)
 avatar: /assets/img/cappy.jpeg
+favicon: /assets/img/cappy-favicon.png
+
 
 # Social preview image (SEO when sharing)
 social_preview_image: /assets/img/preview.png
