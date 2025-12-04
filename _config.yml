@@ -1,0 +1,113 @@
+# The Site Configuration
+theme: jekyll-theme-chirpy
+
+# Language & timezone
+lang: en
+timezone: Europe/Brussels
+
+# SEO & basics
+title: Uzurly
+tagline: Writeups & Cybersecurity
+description: >-
+  Uzurly, 16 years old cybersecurity enthusiast from Belgium (French-speaking).  
+  This is where I share my CTF writeups, research, and explorations in information security.
+
+# Site URL
+url: "https://uzurly.github.io"
+
+# GitHub & socials
+github:
+  username: uzurly
+
+social:
+  name: Uzurly
+  email:   # optional, you can leave empty if you don’t want to show it
+  links:
+    - https://github.com/uzurly
+
+# Sidebar avatar (place an image in /assets/img/avatar.png)
+avatar: /assets/img/cappy.jpeg
+
+
+# Social preview image (SEO when sharing)
+social_preview_image: /assets/img/preview.png
+
+# Theme preferences
+theme_mode: # [light | dark] — leave empty to follow system preferences
+
+# Table of contents
+toc: true
+
+# Comments system (disabled for now)
+comments:
+  provider:
+
+# Progressive Web App (site installable on mobile)
+pwa:
+  enabled: true
+  cache:
+    enabled: true
+    deny_paths:
+
+# Pagination
+paginate: 10
+
+# Base URL
+baseurl: ""
+
+# Syntax highlighting for code blocks
+kramdown:
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: highlight
+    block:
+      line_numbers: true
+      start_line: 1
+
+# Collections & defaults
+collections:
+  tabs:
+    output: true
+    sort_by: order
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+      comments: true
+      toc: true
+      permalink: /posts/:title/
+  - scope:
+      path: _drafts
+    values:
+      comments: false
+  - scope:
+      path: ""
+      type: tabs
+    values:
+      layout: page
+      permalink: /:title/
+
+# CSS & HTML compression
+sass:
+  style: compressed
+
+compress_html:
+  clippings: all
+  comments: all
+  endings: all
+  blanklines: false
+  ignore:
+    envs: [development]
+
+# Archives (tags & categories)
+jekyll-archives:
+  enabled: [categories, tags]
+  layouts:
+    category: category
+    tag: tag
+  permalinks:
+    tag: /tags/:name/
+    category: /categories/:name/
