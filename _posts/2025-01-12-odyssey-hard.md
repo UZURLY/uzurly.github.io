@@ -3,8 +3,9 @@ layout: post
 title: "Odyssey (Hard) — HackSmarter"
 date: 2025-01-12 20:00:00 +0100
 categories: [Writeups, HackSmarter]
-tags: [Odyssey, Hard, Windows, Linux, AD, SSTI, Privesc]
+tags: [Hard, Windows, Linux, AD, SSTI, Privesc]
 image: assets/img/Writeup/Hacksmarter/Odyssey/odyssey.png
+description: Hard Windows Machine Writeup by Uzurly
 ---
 
 # Enumeration
@@ -148,7 +149,7 @@ image: assets/img/Writeup/Hacksmarter/Odyssey/odyssey.png
 ```
 nxc smb hosts.txt --generate-hosts-file hosts
 SMB         10.1.206.2      445    DC01             [*] Windows 11 / Server 2025 Build 26100 x64 (name:DC01) (domain:hsm.local) (signing:True) (SMBv1:None) (Null Auth:True)
-SMB         10.1.182.10     445    EC2AMAZ-NS87CNK  [*] Windows 11 / Server 2025 Build 26100 x64 (name:EC2AMAZ-NS87
+SMB         10.1.182.10     445    EC2AMAZ-NS87CNK  [*] Windows 11 / Server 2025 Build 26100 x64 (name:EC2AMAZ-NS87)
 ```
 ```
 cat hosts
@@ -172,8 +173,10 @@ kerbrute userenum --domain "hsm.local"  --dc DC01.hsm.local /usr/share/wordlists
 ![5o](/assets/img/Writeup/Hacksmarter/Odyssey/5o.png)
 
  By submitting a single quote in the login form, the application returned a SQL query error. This indicates that the endpoint is likely vulnerable to SQL injection.
+
 ![6o](/assets/img/Writeup/Hacksmarter/Odyssey/6o.png)
 ![7o](/assets/img/Writeup/Hacksmarter/Odyssey/7o.png)
+
  Based on this error, I though it was possible to craft a valid SQL query to bypass the login. In this case, I launched SQLMap in the background as follows:
 ```
 sqlmap -u "http://10.1.66.62:5000/login" --batch --dbs --level 5 --risk 3
@@ -210,7 +213,9 @@ Priority: u=4
 #### After taking a break and reconsidering the attack surface, I remembered the Enter your template input field. Initially, I tried supplying my own IP address to trigger a hit on Responder, but then I noticed that the input was being reflected in the response.
 
 ![9o](/assets/img/Writeup/Hacksmarter/Odyssey/9o.png)
+
  This immediately made me think of a potential SSTI (Server‑Side Template Injection) vulnerability.
+
 ```
 {% raw %} {{7*7}} {% endraw %}
 ```
@@ -227,6 +232,7 @@ Priority: u=4
 
  Using the following resource:  
 [Server-Side Template Injection with Jinja2](https://onsecurity.io/article/server-side-template-injection-with-jinja2/) 
+
  I identified suitable SSTI payload examples.
  This allowed me to confirm **remote code execution** under the user context **`ghill_sa`**.
 
@@ -254,11 +260,13 @@ pwncat-cs :443
  The presence of a private key stored in a user’s home directory represents a significant security risk, as an attacker could potentially download and attempt to use it for unauthorized authentication.
 
  This finding indicates improper key management practices and highlights the need for stronger access‑control policies and secure storage of SSH credentials. 
+
 ![15o](/assets/img/Writeup/Hacksmarter/Odyssey/15o.png)
 
  I uploaded the key, set its permissions to `600`, and attempted to connect as `root` and it worked.
 
 ![15.5o](/assets/img/Writeup/Hacksmarter/Odyssey/15.5o.png)
+
  Now that I had root access on the Linux host, my next steps were to consider potential pivoting options and perform local post‑exploitation enumeration.  
  This included reviewing the root directory and collecting interesting files for analysis.  
  I also inspected files such as `/etc/krb5.keytab` (in case the Linux host was integrated into the AD environment) as well as `/etc/passwd` and `/etc/shadow` to assess whether user password hashes could be recovered for offline analysis.
@@ -274,9 +282,11 @@ scp -i id_ed25519 root@10.1.66.62:/etc/passwd .
 passwd                         
 ```
 ![16o](/assets/img/Writeup/Hacksmarter/Odyssey/16o.png)
+
  Using John the Ripper for offline cracking, I successfully recovered the plaintext password from the extracted hash.  
  The password revealed was: **P@ssw0rd!**
 ![17](/assets/img/Writeup/Hacksmarter/Odyssey/17.png)
+
  With this recovered password, I attempted to authenticate against the DC and the `EC2AMAZ-NS87CNK` host using `nxc` to check for possible credential reuse across the Windows environment.
 
 ## Shell as ghill_sa on EC2AMAZ-NS87CNK
@@ -284,13 +294,14 @@ passwd
 nxc rdp WinHosts -u 'ghill_sa' -p 'P@ssw0rd!' --local-auth
 ```
 ![18](/assets/img/Writeup/Hacksmarter/Odyssey/18.png)
+
  With valid credentials confirmed, I was able to access the `EC2AMAZ-NS87CNK` machine through RDP.  
 I connected using `xfreerdp` and began performing a full enumeration of the host to identify potential privilege‑escalation vectors and opportunities for lateral movement.
 
 ```
 xfreerdp /u:ghill_sa /p:'P@ssw0rd!' /v:10.1.182.10 /dynamic-resolution /cert:ignore
 ```
-###Smb Share
+### Smb Share
  After connecting to the machine, I explored the `C:\` drive.  
  Inside the `Share` directory, I found several notes and files left on the system, including the following discovery:
 

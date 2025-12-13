@@ -19,7 +19,7 @@ title: Uzurly Security # the main title
 tagline: Cybersecurity & writeups  # it will display as the subtitle
 
 description: >- # used by seo meta and the atom feed
-  A minimal, responsive and feature-rich Jekyll theme for technical writing.
+  Uzurly Security is a blog focused on cybersecurity, penetration testing, and writeups of security challenges.
 
 # Fill in the protocol & hostname for your site.
 # E.g. 'https://username.github.io', note that it does not end with a '/'.
@@ -28,15 +28,15 @@ url: "https://username.github.io"
 github:
   username: UZURLY # change to your GitHub username
 
-twitter:
-  username: twitter_username # change to your Twitter username
+# twitter:
+  # username: "" # change to your Twitter username
 
 social:
   # Change to your full name.
   # It will be displayed as the default author of the posts and the copyright owner in the Footer
   name: Uzurly
-  email: "" # change to your email address
-  fediverse_handle: "@you@domain.com" # change to your fediverse handle or leave empty
+  email: "Uzurly" # change to your email address
+  ## fediverse_handle: "@you@domain.com" # change to your fediverse handle or leave empty
   links:
     # The first element serves as the copyright owner's link
     - https://twitter.com/username # change to your Twitter homepage
