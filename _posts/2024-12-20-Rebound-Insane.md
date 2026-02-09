@@ -89,7 +89,7 @@ description: Insane Windows Machine Writeup by Uzurly
 
  📝 Next Steps
 
- Add hostnames to /etc/hostss
+ Add hostnames to /etc/hosts
 ### DNS
 ```
  echo '10.10.11.231 rebound.htb dc01.rebound.htb' >> /etc/hosts
@@ -152,7 +152,7 @@ GetUserSPNs.py -no-preauth jjones -usersfile users.txt -dc-host 10.10.11.231 reb
 ### Bloodhound  whit oorend
  We can use `nxc ldap` to extract domain information for BloodHound, enabling visualization of potential escalation paths.
 ```
-nxc ldap dc01.rebound.htbb -u 'oorend' -p 'pass.txt' -k -c all --bloodhound --dns-server 10.10.11.231
+nxc ldap dc01.rebound.htb -u 'oorend' -p 'pass.txt' -k -c all --bloodhound --dns-server 10.10.11.231
 ```
 ## Privilege escalation pathway mapped out with BloodHound.
  The BloodHound data reveals a clear escalation path: the user `oorend` has the ability to add itself to the `ServiceMgmt` group. Members of `ServiceMgmt` possess `GenericAll` rights over the `Service Users` group, which includes the `winrm_svc` account. Since `winrm_svc` is configured as a Remote Desktop user, this enables `oorend` to gain remote access to the system, making this attack path both logical and effective.
