@@ -16,10 +16,10 @@ timezone: Europe/Paris
 
 title: Uzurly Security # the main title
 
-tagline: Cybersecurity & writeups  # it will display as the subtitle
+tagline: Active Directory, privilege escalation & CTF writeups  # it will display as the subtitle
 
 description: >- # used by seo meta and the atom feed
-  Uzurly Security is a blog focused on cybersecurity, penetration testing, and writeups of security challenges.
+  Uzurly Security is a blog by a CPTS & CJCA certified security enthusiast, focused on Active Directory attacks, privilege escalation, and hands-on Hack The Box / CTF writeups.
 
 # Fill in the protocol & hostname for your site.
 # E.g. 'https://username.github.io', note that it does not end with a '/'.
