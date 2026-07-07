@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Lumon (Medium) — Hack The Box"
+title: "Lumon (Medium) — HackSmarter"
 date: 2026-02-05 22:00:00 +0100
 categories:
   - Writeups
