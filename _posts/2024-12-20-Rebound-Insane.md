@@ -28,7 +28,7 @@ description: Insane Windows Machine Writeup by Uzurly
 
 ---
 
- 🖥 Host Information
+### Host Information
 
 - **Host:** 10.10.11.231
     
@@ -45,7 +45,7 @@ description: Insane Windows Machine Writeup by Uzurly
 
 ---
 
- 📡 Open Ports and Services
+### Open Ports and Services
 
 |Port|State|Service|Version / Info|
 |---|---|---|---|
@@ -68,7 +68,7 @@ description: Insane Windows Machine Writeup by Uzurly
 
 ---
 
- 📌 Key AD Attack Surface
+### Key AD Attack Surface
 
 - **DNS (53)** → Zone transfer & name enumeration (`dig`, `dnsrecon`)
     
@@ -87,10 +87,11 @@ description: Insane Windows Machine Writeup by Uzurly
 
 ---
 
- 📝 Next Steps
+### Next Steps
 
- Add hostnames to /etc/hosts
-### DNS
+Add hostnames to /etc/hosts
+
+#### DNS
 ```
  echo '10.10.11.231 rebound.htb dc01.rebound.htb' >> /etc/hosts
 ```
@@ -241,7 +242,7 @@ nxc ldap dc01.rebound.htb -u 'tbrady' -p 'pass.txt' --gmsa -k
 
 ### Resource-Based Constrained Delegation
 
- Background
+#### Background
 
 In the above constrained delegation, the DC tracked on the web server object that it was allowed to delegate (without protocol transition) for the DB. In resource-based constrained delegation, it’s similar, but the DC tracks a trusted list of accounts on the DB object what services are allowed to delegate to it, and the resource can modify it’s own list.
 
@@ -292,7 +293,7 @@ Info: Establishing connection to remote endpoint
 >***************************
 ```
 
-## PS much simpler explanation:
+## Takeaways
 - **Delegation** = giving someone permission to act on your behalf for certain tasks.
     
 - **Normal constrained delegation**: The boss says, _“You can go talk to the database in my name.”_

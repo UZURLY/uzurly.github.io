@@ -10,7 +10,7 @@ tags:
   - medium
   - Windows
   - ActiveDirectory
-  - llmnr 
+  - llmnr
   - PrivEsc
 image: assets/img/Writeup/Hacksmarter/Lumon/lumon.png
 published: true
@@ -297,11 +297,7 @@ Membership in this group typically grants the ability to read Local Administrato
 The account mark was enabled, making it the most viable target for privilege escalation.
 
 ![17](/assets/img/Writeup/Hacksmarter/Lumon/17.png)
-
 ![19](/assets/img/Writeup/Hacksmarter/Lumon/19.png)
-
-The account mark was enabled, making it the most viable target for privilege escalation.
-
 ![18](/assets/img/Writeup/Hacksmarter/Lumon/18.png)
 
 ### Abusing Password Reset Permissions
@@ -309,7 +305,7 @@ The account mark was enabled, making it the most viable target for privilege esc
 Using the IntranetSvc account, the password of the user mark was reset via bloodyAD.
 
 ```
-[🔴][Feb 04, 2026 - 04:37:10 (CET)] exegol-htb Lumon # bloodyAD --host 10.1.42.32 -d lumons.hacksmarter -u intranetsvc -p 'Servicesince1979' set password marks Password123
+[🔴][Feb 04, 2026 - 04:37:10 (CET)] exegol-htb Lumon # bloodyAD --host 10.1.42.32 -d lumons.hacksmarter -u intranetsvc -p 'Servicesince1979' set password mark Password123
 ```
 This provided access to a LAPS-privileged account.
 
@@ -355,15 +351,10 @@ net localgroup Administrators
 
 ### Cracking Domain Administrator Credentials
 
-The cached MSCachev2 hash for hellye was extracted  using nxc and cracked using John the Ripper.
-and we got the hash for helly whos she admin on the dc01
+The cached MSCachev2 hash for hellye — a separate, higher-privileged account from the initial `hellyr` foothold, and an admin on DC01 — was extracted using nxc and cracked using John the Ripper.
 
 ![24](/assets/img/Writeup/Hacksmarter/Lumon/24.png)
 
-
-and we got the hash for hellye who's an admin on the DC01
-
-let's crack the hash of helly and then connect to grab the last flag 
 ```
 [🔴][Feb 04, 2026 - 06:25:09 (CET)] exegol-htb Lumon # nano hash.txt
 [🔴][Feb 04, 2026 - 06:25:58 (CET)] exegol-htb Lumon # rock_john hash.txt
@@ -389,3 +380,10 @@ SMB         10.1.42.32      445    DC01             [*] Copying "\Users\Administ
 SMB         10.1.42.32      445    DC01             [+] File "\Users\Administrator\Desktop\root.txt" was downloaded to "root.tx
 ```
 ![27](/assets/img/Writeup/Hacksmarter/Lumon/27.png)
+
+## Takeaways
+
+- Writable SMB shares are a reliable way to force outbound NTLM authentication — when Responder alone doesn't catch anything, a `.library-ms`/shortcut-based coercion PoC is worth trying next.
+- Web apps that let you supply a UNC path for a "browse" or "import" feature are an NTLM capture primitive in disguise — pointing them at your own listener is often enough.
+- `ForceChangePassword` plus LAPS-reader group membership is a two-hop chain: reset a LAPS-admin's password, then read the local admin credentials it unlocks.
+- Cached domain credentials (MSCachev2/DCC2) on a machine you control as local admin are worth dumping and cracking — they can belong to a much higher-privileged account than the one that got you there.
