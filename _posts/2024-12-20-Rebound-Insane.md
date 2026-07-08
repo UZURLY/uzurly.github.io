@@ -110,7 +110,7 @@ Add hostnames to /etc/hosts
 ```
 ![NXC Rebound 2](/assets/img/Writeup/HacktheBox/Windows/Insane/Rebound/nxcRebound2.png)
 
- Creating a wordlist whit all the (SidTypeUser) from the rid brute force
+ Creating a wordlist with all the (SidTypeUser) from the rid brute force
 ```
 cat users.txt
 
@@ -150,7 +150,7 @@ GetUserSPNs.py -no-preauth jjones -usersfile users.txt -dc-host 10.10.11.231 reb
 ![Password Spraying](/assets/img/Writeup/HacktheBox/Windows/Insane/Rebound/nxcSpray3.png)
 
 
-### Bloodhound  whit oorend
+### Bloodhound with oorend
  We can use `nxc ldap` to extract domain information for BloodHound, enabling visualization of potential escalation paths.
 ```
 nxc ldap dc01.rebound.htb -u 'oorend' -p 'pass.txt' -k -c all --bloodhound --dns-server 10.10.11.231
@@ -205,7 +205,7 @@ nxc ldap dc01.rebound.htb -u 'oorend' -p 'pass.txt' -k -c all --bloodhound --dns
  - RemotePotato0
  - KrbRelay
 
- I’ll show whit RemotePotato0.
+ I’ll show with RemotePotato0.
 
 ```
 sudo socat -v TCP-LISTEN:135,fork,reuseaddr TCP:10.10.11.231:9999 &

