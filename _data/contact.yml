@@ -3,6 +3,10 @@
 - type: github
   icon: "fab fa-github"
 
+- type: hackthebox
+  icon: "fas fa-terminal"
+  url: "https://profile.hackthebox.com/profile/019e4bf7-b915-7288-9c8b-596f30b2d296"
+
 - type: twitter
   icon: "fa-brands fa-x-twitter"
 

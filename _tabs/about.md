@@ -26,4 +26,5 @@ My long-term goal is to achieve the OSEP and OSCP certifications.
 
 ## Contact
 - GitHub: [github.com/uzurly](https://github.com/uzurly)
+- Hack The Box: [profile.hackthebox.com](https://profile.hackthebox.com/profile/019e4bf7-b915-7288-9c8b-596f30b2d296)
 - Discord: `nmapetho1`
